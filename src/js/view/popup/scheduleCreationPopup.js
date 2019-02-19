@@ -240,7 +240,7 @@ ScheduleCreationPopup.prototype._toggleIsPrivate = function(target) {
 ScheduleCreationPopup.prototype._onClickSaveSchedule = function(target) {
     var className = config.classname('popup-save');
     var cssPrefix = config.cssPrefix;
-    var title, isPrivate, location, isAllDay, startDate, endDate, state;
+    var title, isPrivate, location, recurrence, isAllDay, startDate, endDate, state;
     var start, end, calendarId;
 
     if (!domutil.hasClass(target, className) && !domutil.closest(target, '.' + className)) {
@@ -263,6 +263,7 @@ ScheduleCreationPopup.prototype._onClickSaveSchedule = function(target) {
 
     isPrivate = !domutil.hasClass(domutil.get(cssPrefix + 'schedule-private'), config.classname('public'));
     location = domutil.get(cssPrefix + 'schedule-location');
+    recurrence = domutil.get(cssPrefix + 'schedule-recurrence');
     state = domutil.get(cssPrefix + 'schedule-state');
     isAllDay = !!domutil.get(cssPrefix + 'schedule-allday').checked;
 
@@ -288,6 +289,7 @@ ScheduleCreationPopup.prototype._onClickSaveSchedule = function(target) {
                 calendarId: calendarId || this._schedule.calendarId,
                 title: title.value,
                 location: location.value,
+                recurrence: recurrence.value ? JSON.parse(recurrence.value) : null,
                 raw: {
                     class: isPrivate ? 'private' : 'public'
                 },
@@ -313,6 +315,7 @@ ScheduleCreationPopup.prototype._onClickSaveSchedule = function(target) {
             calendarId: calendarId,
             title: title.value,
             location: location.value,
+            recurrence: recurrence.value ? JSON.parse(recurrence.value) : null,
             raw: {
                 class: isPrivate ? 'private' : 'public'
             },

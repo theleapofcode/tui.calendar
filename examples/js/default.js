@@ -13,6 +13,7 @@
 
     cal = new Calendar('#calendar', {
         defaultView: 'week',
+        taskView: false,
         useCreationPopup: useCreationPopup,
         useDetailPopup: useDetailPopup,
         calendars: CalendarList,
@@ -264,32 +265,55 @@
     }
     function saveNewSchedule(scheduleData) {
         var calendar = scheduleData.calendar || findCalendar(scheduleData.calendarId);
-        var schedule = {
-            id: String(chance.guid()),
-            title: scheduleData.title,
-            isAllDay: scheduleData.isAllDay,
-            start: scheduleData.start,
-            end: scheduleData.end,
-            category: scheduleData.isAllDay ? 'allday' : 'time',
-            dueDateClass: '',
-            color: calendar.color,
-            bgColor: calendar.bgColor,
-            dragBgColor: calendar.bgColor,
-            borderColor: calendar.borderColor,
-            location: scheduleData.location,
-            raw: {
-                class: scheduleData.raw['class']
-            },
-            state: scheduleData.state
-        };
-        if (calendar) {
-            schedule.calendarId = calendar.id;
-            schedule.color = calendar.color;
-            schedule.bgColor = calendar.bgColor;
-            schedule.borderColor = calendar.borderColor;
+        var schedules = [];
+        var recurrence = scheduleData.recurrence;
+        if(!recurrence) {
+            var schedule = {
+                id: String(chance.guid()),
+                title: scheduleData.title,
+                isAllDay: scheduleData.isAllDay,
+                start: scheduleData.start,
+                end: scheduleData.end,
+                category: scheduleData.isAllDay ? 'allday' : 'time',
+                dueDateClass: '',
+                location: scheduleData.location,
+                raw: {
+                    class: scheduleData.raw['class']
+                },
+                state: scheduleData.state
+            };
+            if (calendar) {
+                schedule.calendarId = calendar.id;
+                schedule.color = calendar.color;
+                schedule.bgColor = calendar.bgColor;
+                schedule.dragBgColor = calendar.bgColor;
+                schedule.borderColor = calendar.borderColor;
+            }
+            schedules.push(schedule);
+        } else {
+            /*{
+                "repeatType": "weekly",
+                "repeatPattern": {
+                    "everyDays": null,
+                    "everyWeeks": 1,
+                    "daysOfWeek": [1, 2, 3, 4, 5],
+                    "everyMonths": null,
+                    "dayOfMoth": null,
+                    "monthOfYear": null
+                },
+                "startDate": "15/02/2019",
+                "endDate": "15/03/2019",
+                "occurrences": null,
+                "startTime": "13:00",
+                "endTime": "14:00",
+                "durationInMinutes": 60
+            }*/
+            if(recurrence.repeatType === 'daily') {
+
+            }
         }
 
-        cal.createSchedules([schedule]);
+        cal.createSchedules(schedules);
 
         refreshScheduleVisibility();
     }
@@ -393,8 +417,8 @@
 
     function setSchedules() {
         cal.clear();
-        generateSchedule(cal.getViewName(), cal.getDateRangeStart(), cal.getDateRangeEnd());
-        cal.createSchedules(ScheduleList);
+        // generateSchedule(cal.getViewName(), cal.getDateRangeStart(), cal.getDateRangeEnd());
+        // cal.createSchedules(ScheduleList);
         // var schedules = [
         //     {id: 489273, title: 'Workout for 2018-08-17', isAllDay: false, start: '2018-09-06T10:00+09:00', end: '2018-09-06T14:00:00+09:00', goingDuration: 30, comingDuration: 30, color: '#ffffff', isVisible: true, bgColor: '#69BB2D', dragBgColor: '#69BB2D', borderColor: '#69BB2D', calendarId: 'logged-workout', category: 'time', dueDateClass: '', customStyle: 'cursor: default;', isPending: false, isFocused: false, isReadOnly: true, isPrivate: false, location: '', attendees: '', recurrenceRule: '', state: ''},
         //     {id: 18073, title: 'completed with blocks', isAllDay: false, start: '2018-09-06T09:00:00+09:00', end: '2018-09-06T10:00:00+09:00', color: '#ffffff', isVisible: true, bgColor: '#54B8CC', dragBgColor: '#54B8CC', borderColor: '#54B8CC', calendarId: 'workout', category: 'time', dueDateClass: '', customStyle: '', isPending: false, isFocused: false, isReadOnly: false, isPrivate: false, location: '', attendees: '', recurrenceRule: '', state: ''}
