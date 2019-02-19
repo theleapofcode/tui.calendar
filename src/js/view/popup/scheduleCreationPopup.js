@@ -251,11 +251,11 @@ ScheduleCreationPopup.prototype._onClickSaveSchedule = function(target) {
     startDate = new TZDate(this.rangePicker.getStartDate());
     endDate = new TZDate(this.rangePicker.getEndDate());
 
-    if (!title.value) {
+    /* if (!title.value) {
         title.focus();
 
         return true;
-    }
+    } */
 
     if (!startDate && !endDate) {
         return true;
