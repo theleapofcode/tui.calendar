@@ -79,9 +79,9 @@
         }
     });
 
-    document.getElementById('calendar').addEventListener('keydown', e => {
+    /*document.getElementById('calendar').addEventListener('keydown', e => {
         console.log('keydown', e);
-    });
+    });*/
 
     /**
      * Get time template for time and all-day
@@ -291,26 +291,87 @@
             }
             schedules.push(schedule);
         } else {
-            /*{
-                "repeatType": "weekly",
-                "repeatPattern": {
-                    "everyDays": null,
-                    "everyWeeks": 1,
-                    "daysOfWeek": [1, 2, 3, 4, 5],
-                    "everyMonths": null,
-                    "dayOfMoth": null,
-                    "monthOfYear": null
-                },
-                "startDate": "15/02/2019",
-                "endDate": "15/03/2019",
-                "occurrences": null,
-                "startTime": "13:00",
-                "endTime": "14:00",
-                "durationInMinutes": 60
-            }*/
+            console.log(recurrence);
+            var slots = [];
+            var endTime = recurrence.endTime || ((parseInt(recurrence.startTime.split(':')[0]) + Math.floor(recurrence.durationInMinutes / 60)) + ':' + (parseInt(recurrence.startTime.split(':')[1]) + recurrence.durationInMinutes % 60));
             if(recurrence.repeatType === 'daily') {
+                var endDate = recurrence.endDate ? moment(new Date(recurrence.endDate + 'T23:59')) : (moment(new Date(recurrence.startDate + 'T23:59')).add((recurrence.occurrences * recurrence.repeatPattern.everyDays ), 'd'));
+                var dat = moment(new Date(recurrence.startDate + 'T00:00'));
+                
+                while(dat.isBefore(endDate)) {
+                    var startMoment = moment(dat).add(recurrence.startTime.split(':')[0], 'h').add(recurrence.startTime.split(':')[1], 'm');
+                    var endMoment = moment(dat).add(endTime.split(':')[0], 'h').add(endTime.split(':')[1], 'm');
+                    slots.push({
+                        start: startMoment.toDate().getTime(),
+                        end: endMoment.toDate().getTime()
+                    });
 
+                    dat.add(recurrence.repeatPattern.everyDays, 'd');
+                }
+            } else if(recurrence.repeatType === 'weekly') {
+                var endDate = recurrence.endDate ? moment(new Date(recurrence.endDate + 'T23:59')) : (moment(new Date(recurrence.startDate + 'T23:59')).add((recurrence.occurrences * 7 * recurrence.repeatPattern.everyWeeks ), 'd'));
+                var dat = moment(new Date(recurrence.startDate + 'T00:00'));
+                
+                while(dat.isBefore(endDate)) {
+                    if(recurrence.repeatPattern.daysOfWeek.indexOf(dat.day()) > -1) {
+                        var startMoment = moment(dat).add(recurrence.startTime.split(':')[0], 'h').add(recurrence.startTime.split(':')[1], 'm');
+                        var endMoment = moment(dat).add(endTime.split(':')[0], 'h').add(endTime.split(':')[1], 'm');
+                        slots.push({
+                            start: startMoment.toDate().getTime(),
+                            end: endMoment.toDate().getTime()
+                        });
+                    }
+
+                    if(dat.day() === 6) {
+                        dat.add((((recurrence.repeatPattern.everyWeeks - 1) * 7) + 1), 'd');
+                    } else {
+                        dat.add(1, 'd');
+                    }
+                }
+            } else if(recurrence.repeatType === 'monthly') {
+                var endDate = recurrence.endDate ? moment(new Date(recurrence.endDate + 'T23:59')) : (moment(new Date(recurrence.startDate + 'T23:59')).add((recurrence.occurrences * recurrence.repeatPattern.everyMonths ), 'M'));
+                var dat = moment(new Date(recurrence.startDate + 'T00:00'));
+                
+                while(dat.isBefore(endDate)) {
+                    if(recurrence.repeatPattern.dayOfMoth === dat.date()) {
+                        var startMoment = moment(dat).add(recurrence.startTime.split(':')[0], 'h').add(recurrence.startTime.split(':')[1], 'm');
+                        var endMoment = moment(dat).add(endTime.split(':')[0], 'h').add(endTime.split(':')[1], 'm');
+                        slots.push({
+                            start: startMoment.toDate().getTime(),
+                            end: endMoment.toDate().getTime()
+                        });
+
+                        dat.add(recurrence.repeatPattern.everyMonths, 'M');
+                    } else {
+                        dat.add(1, 'd');
+                    }
+                }
             }
+
+            slots.forEach((slot) => {
+                var schedule = {
+                    id: String(chance.guid()),
+                    title: scheduleData.title,
+                    isAllDay: scheduleData.isAllDay,
+                    start: new Date(slot.start),
+                    end: new Date(slot.end),
+                    category: scheduleData.isAllDay ? 'allday' : 'time',
+                    dueDateClass: '',
+                    location: scheduleData.location,
+                    raw: {
+                        class: scheduleData.raw['class']
+                    },
+                    state: scheduleData.state
+                };
+                if (calendar) {
+                    schedule.calendarId = calendar.id;
+                    schedule.color = calendar.color;
+                    schedule.bgColor = calendar.bgColor;
+                    schedule.dragBgColor = calendar.bgColor;
+                    schedule.borderColor = calendar.borderColor;
+                }
+                schedules.push(schedule);
+            });
         }
 
         cal.createSchedules(schedules);
@@ -416,7 +477,7 @@
     }
 
     function setSchedules() {
-        cal.clear();
+        // cal.clear();
         // generateSchedule(cal.getViewName(), cal.getDateRangeStart(), cal.getDateRangeEnd());
         // cal.createSchedules(ScheduleList);
         // var schedules = [
