@@ -54,6 +54,7 @@
         'beforeDeleteSchedule': function(e) {
             console.log('beforeDeleteSchedule', e);
             cal.deleteSchedule(e.schedule.id, e.schedule.calendarId);
+            // cal.deleteScheduleSeries(e.schedule.seriesId, e.schedule.calendarId);
         },
         'afterRenderSchedule': function(e) {
             var schedule = e.schedule;
@@ -291,7 +292,6 @@
             }
             schedules.push(schedule);
         } else {
-            console.log(recurrence);
             var slots = [];
             var endTime = recurrence.endTime || ((parseInt(recurrence.startTime.split(':')[0]) + Math.floor(recurrence.durationInMinutes / 60)) + ':' + (parseInt(recurrence.startTime.split(':')[1]) + recurrence.durationInMinutes % 60));
             if(recurrence.repeatType === 'daily') {
@@ -348,9 +348,11 @@
                 }
             }
 
+            var seriesId = String(chance.guid());
             slots.forEach((slot) => {
                 var schedule = {
                     id: String(chance.guid()),
+                    seriesId: seriesId,
                     title: scheduleData.title,
                     isAllDay: scheduleData.isAllDay,
                     start: new Date(slot.start),

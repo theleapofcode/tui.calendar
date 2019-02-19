@@ -551,6 +551,32 @@ Calendar.prototype.deleteSchedule = function(scheduleId, calendarId, silent) {
     }
 };
 
+/**
+ * Delete a schedule series.
+ * @param {string} seriesId - ID of schedule series to delete
+ * @param {string} calendarId - calendarId of the schedule to delete
+ * @param {boolean} [silent=false] - no auto render after creation when set true
+ */
+Calendar.prototype.deleteScheduleSeries = function(seriesId, calendarId, silent) {
+    var ctrl = this._controller,
+        ownSchedules = ctrl.schedules,
+        seriesSchedules = Object.values(ownSchedules.items).filter(function(model) {
+            return model.seriesId === seriesId && model.calendarId === calendarId;
+        });
+
+    if (!seriesSchedules) {
+        return;
+    }
+
+    seriesSchedules.forEach(function(schedule) {
+        ctrl.deleteSchedule(schedule);
+    });
+
+    if (!silent) {
+        this.render();
+    }
+};
+
 /**********
  * Private Methods
  **********/
