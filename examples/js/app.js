@@ -92,7 +92,7 @@
      * @param {boolean} isAllDay - isAllDay or hasMultiDates
      * @returns {string}
      */
-    function getTimeTemplate (schedule, isAllDay) {
+    function getTimeTemplate(schedule, isAllDay) {
         var html = [];
         var start = moment(schedule.start.toUTCString());
         if (!isAllDay) {
@@ -121,7 +121,7 @@
      * A listener for click the menu
      * @param {Event} e - click event
      */
-    function onClickMenu (e) {
+    function onClickMenu(e) {
         var target = $(e.target).closest('a[role="menuitem"]')[0];
         var action = getDataAction(target);
         var options = cal.getOptions();
@@ -181,7 +181,7 @@
         setSchedules();
     }
 
-    function onClickNavi (e) {
+    function onClickNavi(e) {
         var action = getDataAction(e.target);
 
         switch (action) {
@@ -202,7 +202,7 @@
         setSchedules();
     }
 
-    function onNewSchedule () {
+    function onNewSchedule() {
         var title = $('#new-schedule-title').val();
         var location = $('#new-schedule-location').val();
         var isAllDay = document.getElementById('new-schedule-allday').checked;
@@ -236,13 +236,13 @@
         $('#modal-new-schedule').modal('hide');
     }
 
-    function onChangeNewScheduleCalendar (e) {
+    function onChangeNewScheduleCalendar(e) {
         var target = $(e.target).closest('a[role="menuitem"]')[0];
         var calendarId = getDataAction(target);
         changeNewScheduleCalendar(calendarId);
     }
 
-    function changeNewScheduleCalendar (calendarId) {
+    function changeNewScheduleCalendar(calendarId) {
         var calendarNameElement = document.getElementById('calendarName');
         var calendar = findCalendar(calendarId);
         var html = [];
@@ -255,7 +255,7 @@
         selectedCalendar = calendar;
     }
 
-    function createNewSchedule (event) {
+    function createNewSchedule(event) {
         var start = event.start ? new Date(event.start.getTime()) : new Date();
         var end = event.end ? new Date(event.end.getTime()) : moment().add(1, 'hours').toDate();
 
@@ -266,7 +266,7 @@
             });
         }
     }
-    function saveNewSchedule (scheduleData) {
+    function saveNewSchedule(scheduleData) {
         var calendar = scheduleData.calendar || findCalendar(scheduleData.calendarId);
         var schedules = [];
         var recurrence = scheduleData.recurrence;
@@ -383,7 +383,7 @@
         refreshScheduleVisibility();
     }
 
-    function onChangeCalendars (e) {
+    function onChangeCalendars(e) {
         var calendarId = e.target.value;
         var checked = e.target.checked;
         var viewAll = document.querySelector('.lnb-calendars-item input');
@@ -419,7 +419,7 @@
         refreshScheduleVisibility();
     }
 
-    function refreshScheduleVisibility () {
+    function refreshScheduleVisibility() {
         var calendarElements = Array.prototype.slice.call(document.querySelectorAll('#calendarList input'));
 
         CalendarList.forEach(function(calendar) {
@@ -434,7 +434,7 @@
         });
     }
 
-    function setDropdownCalendarType () {
+    function setDropdownCalendarType() {
         var calendarTypeName = document.getElementById('calendarTypeName');
         var calendarTypeIcon = document.getElementById('calendarTypeIcon');
         var options = cal.getOptions();
@@ -462,13 +462,13 @@
         calendarTypeIcon.className = iconClassName;
     }
 
-    function currentCalendarDate (format) {
+    function currentCalendarDate(format) {
         var currentDate = moment([cal.getDate().getFullYear(), cal.getDate().getMonth(), cal.getDate().getDate()]);
 
         return currentDate.format(format);
     }
 
-    function setRenderRangeText () {
+    function setRenderRangeText() {
         var renderRange = document.getElementById('renderRange');
         var options = cal.getOptions();
         var viewName = cal.getViewName();
@@ -487,7 +487,7 @@
         renderRange.innerHTML = html.join('');
     }
 
-    function setSchedules () {
+    function setSchedules() {
         // cal.clear();
         // generateSchedule(cal.getViewName(), cal.getDateRangeStart(), cal.getDateRangeEnd());
         // cal.createSchedules(ScheduleList);
@@ -495,7 +495,7 @@
         refreshScheduleVisibility();
     }
 
-    function setEventListener () {
+    function setEventListener() {
         $('#menu-navi').on('click', onClickNavi);
         $('.dropdown-menu a[role="menuitem"]').on('click', onClickMenu);
         $('#lnb-calendars').on('change', onChangeCalendars);
@@ -508,7 +508,7 @@
         window.addEventListener('resize', resizeThrottled);
     }
 
-    function getDataAction (target) {
+    function getDataAction(target) {
         return target.dataset ? target.dataset.action : target.getAttribute('data-action');
     }
 

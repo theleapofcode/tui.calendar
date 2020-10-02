@@ -1,5 +1,5 @@
 /* eslint-disable */
-function init () {
+function init() {
     cal.setCalendars(CalendarList);
 
     setRenderRangeText();
@@ -7,11 +7,11 @@ function init () {
     setEventListener();
 }
 
-function getDataAction (target) {
+function getDataAction(target) {
     return target.dataset ? target.dataset.action : target.getAttribute('data-action');
 }
 
-function setDropdownCalendarType () {
+function setDropdownCalendarType() {
     var calendarTypeName = document.getElementById('calendarTypeName');
     var calendarTypeIcon = document.getElementById('calendarTypeIcon');
     var options = cal.getOptions();
@@ -39,7 +39,7 @@ function setDropdownCalendarType () {
     calendarTypeIcon.className = iconClassName;
 }
 
-function onClickMenu (e) {
+function onClickMenu(e) {
     var target = $(e.target).closest('a[role="menuitem"]')[0];
     var action = getDataAction(target);
     var options = cal.getOptions();
@@ -97,7 +97,7 @@ function onClickMenu (e) {
     setSchedules();
 }
 
-function onClickNavi (e) {
+function onClickNavi(e) {
     var action = getDataAction(e.target);
 
     switch (action) {
@@ -118,7 +118,7 @@ function onClickNavi (e) {
     setSchedules();
 }
 
-function setRenderRangeText () {
+function setRenderRangeText() {
     var renderRange = document.getElementById('renderRange');
     var options = cal.getOptions();
     var viewName = cal.getViewName();
@@ -136,7 +136,7 @@ function setRenderRangeText () {
     renderRange.innerHTML = html.join('');
 }
 
-function setSchedules () {
+function setSchedules() {
     cal.clear();
     generateSchedule(cal.getViewName(), cal.getDateRangeStart(), cal.getDateRangeEnd());
     cal.createSchedules(ScheduleList);
@@ -144,33 +144,33 @@ function setSchedules () {
 }
 
 
-function refreshScheduleVisibility () {
+function refreshScheduleVisibility() {
     var calendarElements = Array.prototype.slice.call(document.querySelectorAll('#calendarList input'));
 
-    CalendarList.forEach(function (calendar) {
+    CalendarList.forEach(function(calendar) {
         cal.toggleSchedules(calendar.id, !calendar.checked, false);
     });
 
     cal.render(true);
 
-    calendarElements.forEach(function (input) {
+    calendarElements.forEach(function(input) {
         var span = input.nextElementSibling;
         span.style.backgroundColor = input.checked ? span.style.borderColor : 'transparent';
     });
 }
 
-resizeThrottled = tui.util.throttle(function () {
+resizeThrottled = tui.util.throttle(function() {
     cal.render();
 }, 50);
 
-function setEventListener () {
+function setEventListener() {
     $('.dropdown-menu a[role="menuitem"]').on('click', onClickMenu);
     $('#menu-navi').on('click', onClickNavi);
     window.addEventListener('resize', resizeThrottled);
 }
 
 cal.on({
-    'clickTimezonesCollapseBtn': function (timezonesCollapsed) {
+    'clickTimezonesCollapseBtn': function(timezonesCollapsed) {
         if (timezonesCollapsed) {
             cal.setTheme({
                 'week.daygridLeft.width': '77px',
