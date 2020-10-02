@@ -1,6 +1,6 @@
 /**
  * @fileoverview Core methods for schedule block placing
- * @author NHN Ent. FE Development Team <dl_javascript@nhnent.com>
+ * @author NHN FE Development Lab <dl_javascript@nhn.com>
  */
 'use strict';
 
@@ -168,19 +168,21 @@ var Core = {
         forEachArr(matrices, function(matrix) {
             forEachArr(matrix, function(column) {
                 forEachArr(column, function(viewModel, index) {
-                    var ymd, dateLength;
+                    var ymd, dateLength, startDate, endDate;
 
                     if (!viewModel) {
                         return;
                     }
 
-                    ymd = datetime.format(viewModel.getStarts(), 'YYYYMMDD');
+                    startDate = viewModel.getStarts();
+                    endDate = viewModel.getEnds();
                     dateLength = datetime.range(
-                        datetime.start(viewModel.getStarts()),
-                        datetime.end(viewModel.getEnds()),
+                        datetime.start(startDate),
+                        datetime.renderEnd(startDate, endDate),
                         datetime.MILLISECONDS_PER_DAY
                     ).length;
 
+                    ymd = datetime.format(startDate, 'YYYYMMDD');
                     viewModel.top = index;
                     viewModel.left = util.inArray(ymd, ymdListToRender);
                     viewModel.width = dateLength;
@@ -195,8 +197,8 @@ var Core = {
 
     /**
      * Limit start, end date each view model for render properly
-     * @param {Date} start - start date to render
-     * @param {Date} end - end date to render
+     * @param {TZDate} start - start date to render
+     * @param {TZDate} end - end date to render
      * @param {Collection|ScheduleViewModel} viewModelColl - schedule view
      *  model collection or ScheduleViewModel
      * @returns {ScheduleViewModel} return view model when third parameter is
@@ -211,12 +213,12 @@ var Core = {
         function limit(viewModel) {
             if (viewModel.getStarts() < start) {
                 viewModel.exceedLeft = true;
-                viewModel.renderStarts = new TZDate(start.getTime());
+                viewModel.renderStarts = new TZDate(start);
             }
 
             if (viewModel.getEnds() > end) {
                 viewModel.exceedRight = true;
-                viewModel.renderEnds = new TZDate(end.getTime());
+                viewModel.renderEnds = new TZDate(end);
             }
 
             return viewModel;
@@ -252,4 +254,3 @@ var Core = {
 };
 
 module.exports = Core;
-

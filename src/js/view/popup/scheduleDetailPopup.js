@@ -1,6 +1,6 @@
 /**
- * @fileoverview Floating layer for  showing detail schedule
- * @author NHN Ent. FE Development Team <dl_javascript@nhnent.com>
+ * @fileoverview Floating layer for showing detail schedule
+ * @author NHN FE Development Lab <dl_javascript@nhn.com>
  */
 'use strict';
 
@@ -11,7 +11,6 @@ var config = require('../../config'),
     domevent = require('../../common/domevent'),
     domutil = require('../../common/domutil');
 var tmpl = require('../template/popup/scheduleDetailPopup.hbs');
-var ARROW_WIDTH_HALF = 8;
 
 /**
  * @constructor
@@ -44,7 +43,7 @@ util.inherit(ScheduleDetailPopup, View);
  * @param {MouseEvent} mouseDownEvent - mouse event object
  */
 ScheduleDetailPopup.prototype._onMouseDown = function(mouseDownEvent) {
-    var target = (mouseDownEvent.target || mouseDownEvent.srcElement),
+    var target = domevent.getEventTarget(mouseDownEvent),
         popupLayer = domutil.closest(target, config.classname('.floating-layer'));
 
     if (popupLayer) {
@@ -71,7 +70,7 @@ ScheduleDetailPopup.prototype.destroy = function() {
  * @param {MouseEvent} clickEvent - mouse event object
  */
 ScheduleDetailPopup.prototype._onClick = function(clickEvent) {
-    var target = (clickEvent.target || clickEvent.srcElement);
+    var target = domevent.getEventTarget(clickEvent);
 
     this._onClickEditSchedule(target);
 
@@ -145,16 +144,9 @@ ScheduleDetailPopup.prototype._setPopupPositionAndArrowDirection = function(even
         width: layer.offsetWidth,
         height: layer.offsetHeight
     };
-    var windowSize = {
-        right: window.innerWidth,
-        bottom: window.innerHeight
-    };
-    var parentRect = this.layer.parent.getBoundingClientRect();
-    var parentBounds = {
-        left: parentRect.left,
-        top: parentRect.top
-    };
-    var scheduleEl = event.target || event.srcElement;
+
+    var containerBound = this.container.getBoundingClientRect();
+    var scheduleEl = domevent.getEventTarget(event);
     var blockEl = domutil.closest(scheduleEl, config.classname('.time-date-schedule-block'))
         || domutil.closest(scheduleEl, config.classname('.weekday-schedule'))
         || scheduleEl;
@@ -163,43 +155,125 @@ ScheduleDetailPopup.prototype._setPopupPositionAndArrowDirection = function(even
 
     this._scheduleEl = blockEl;
 
-    pos = this._calcRenderingData(layerSize, windowSize, scheduleBound);
-    pos.x -= parentBounds.left + 4;
-    pos.y -= (parentBounds.top + ARROW_WIDTH_HALF);
+    pos = this._calcRenderingData(layerSize, containerBound, scheduleBound);
     this.layer.setPosition(pos.x, pos.y);
     this._setArrowDirection(pos.arrow);
 };
 
 /**
+ * Get calculate rendering positions of y and arrow top by schedule block elements
+ * @param {number} scheduleBoundTop - schedule block's top
+ * @param {number} scheduleBoundBottom - schedule block's bottom
+ * @param {number} layerHeight - popup layer's height
+ * @param {number} containerTop - container's top
+ * @param {number} containerBottom - container's bottom
+ * @returns {YAndArrowTop} y and arrowTop
+ */
+ScheduleDetailPopup.prototype._getYAndArrowTop = function(
+    scheduleBoundTop,
+    scheduleBoundBottom,
+    layerHeight,
+    containerTop,
+    containerBottom
+) {
+    var ARROW_WIDTH_HALF = 8;
+    var scheduleVerticalCenter, y, arrowTop;
+
+    scheduleBoundTop = scheduleBoundTop < 0 ? 0 : scheduleBoundTop;
+    scheduleVerticalCenter = (scheduleBoundTop + scheduleBoundBottom) / 2;
+    y = scheduleVerticalCenter - (layerHeight / 2);
+
+    if (y < containerTop) {
+        y = 0;
+        arrowTop = scheduleVerticalCenter - containerTop - ARROW_WIDTH_HALF;
+    } else if (y + layerHeight > containerBottom) {
+        y = Math.max(containerBottom - layerHeight - containerTop, 0);
+        arrowTop = scheduleVerticalCenter - y - containerTop - ARROW_WIDTH_HALF;
+    } else {
+        y -= containerTop;
+    }
+
+    if (arrowTop < 0 || arrowTop > layerHeight) {
+        arrowTop = null;
+    }
+
+    /**
+     * @typedef {Object} YAndArrowTop
+     * @property {number} y - top position of popup layer
+     * @property {number} [arrowTop] - relative position of popup arrow, if it is not set, arrow appears on the middle of popup
+     */
+    return {
+        y: y,
+        arrowTop: arrowTop
+    };
+};
+
+/**
+ * Get calculate rendering x position and arrow direction by schedule block elements
+ * @param {number} scheduleBoundLeft - schedule block's left
+ * @param {number} scheduleBoundRight - schedule block's right
+ * @param {number} layerWidth - popup layer's width
+ * @param {number} containerLeft - container's left
+ * @param {number} containerRight - container's right
+ * @returns {XAndArrowDirection} x and arrowDirection
+ */
+ScheduleDetailPopup.prototype._getXAndArrowDirection = function(
+    scheduleBoundLeft,
+    scheduleBoundRight,
+    layerWidth,
+    containerLeft,
+    containerRight
+) {
+    var arrowDirection = 'arrow-left';
+    var x = scheduleBoundRight;
+    var MARGIN = 4;
+
+    if (x + layerWidth > containerRight) {
+        arrowDirection = 'arrow-right';
+        x = scheduleBoundLeft - layerWidth - MARGIN;
+    } else {
+        x += MARGIN;
+    }
+
+    if (x < containerLeft) {
+        x = 0;
+    } else {
+        x -= containerLeft;
+    }
+
+    /**
+     * @typedef {Object} XAndArrowDirection
+     * @property {number} x - left position of popup layer
+     * @property {string} arrowDirection - direction of popup arrow
+     */
+    return {
+        x: x,
+        arrowDirection: arrowDirection
+    };
+};
+
+/**
  * Calculate rendering position usering guide elements
  * @param {{width: {number}, height: {number}}} layerSize - popup layer's width and height
- * @param {{top: {number}, left: {number}, right: {number}, bottom: {number}}} parentSize - width and height of the upper layer, that acts as a border of popup
- * @param {{top: {number}, left: {number}, right: {number}, bottom: {number}}} guideBound - guide element bound data
+ * @param {{top: {number}, left: {number}, right: {number}, bottom: {number}}} containerBound - width and height of the upper layer, that acts as a border of popup
+ * @param {{top: {number}, left: {number}, right: {number}, bottom: {number}}} scheduleBound - guide element bound data
  * @returns {PopupRenderingData} rendering position of popup and popup arrow
  */
-ScheduleDetailPopup.prototype._calcRenderingData = function(layerSize, parentSize, guideBound) {
-    var guideVerticalCenter = (guideBound.top + guideBound.bottom) / 2;
-    var x = guideBound.right;
-    var y = guideVerticalCenter;
-    var arrowDirection = 'arrow-left';
-    var arrowTop;
-
-    if (y < 0) {
-        y = y + (layerSize.height / 2) - guideVerticalCenter;
-    }
-
-    if (x > 0 && (x + layerSize.width > parentSize.right)) {
-        x = guideBound.left - layerSize.width - ARROW_WIDTH_HALF - 3;
-        arrowDirection = 'arrow-right';
-    }
-
-    if (x < 0) {
-        x = 0;
-    }
-
-    if (guideBound.right > x + layerSize.width) {
-        arrowDirection = 'arrow-right';
-    }
+ScheduleDetailPopup.prototype._calcRenderingData = function(layerSize, containerBound, scheduleBound) {
+    var yPosInfo = this._getYAndArrowTop(
+        scheduleBound.top,
+        scheduleBound.bottom,
+        layerSize.height,
+        containerBound.top,
+        containerBound.bottom
+    );
+    var xPosInfo = this._getXAndArrowDirection(
+        scheduleBound.left,
+        scheduleBound.right,
+        layerSize.width,
+        containerBound.left,
+        containerBound.right
+    );
 
     /**
      * @typedef {Object} PopupRenderingData
@@ -209,11 +283,11 @@ ScheduleDetailPopup.prototype._calcRenderingData = function(layerSize, parentSiz
      * @property {number} [arrow.position] - relative position of popup arrow, if it is not set, arrow appears on the middle of popup
      */
     return {
-        x: x + ARROW_WIDTH_HALF,
-        y: y - (layerSize.height / 2) + ARROW_WIDTH_HALF,
+        x: xPosInfo.x,
+        y: yPosInfo.y,
         arrow: {
-            direction: arrowDirection,
-            position: arrowTop
+            direction: xPosInfo.arrowDirection,
+            position: yPosInfo.arrowTop
         }
     };
 };
@@ -225,7 +299,7 @@ ScheduleDetailPopup.prototype._calcRenderingData = function(layerSize, parentSiz
 ScheduleDetailPopup.prototype._setArrowDirection = function(arrow) {
     var direction = arrow.direction || 'arrow-left';
     var arrowEl = domutil.find(config.classname('.popup-arrow'), this.layer.container);
-    var borderElement = domutil.find(config.classname('.popup-arrow-border', arrowEl));
+    var borderElement = domutil.find(config.classname('.popup-arrow-border'), arrowEl);
 
     if (direction !== config.classname('arrow-left')) {
         domutil.removeClass(arrowEl, config.classname('arrow-left'));

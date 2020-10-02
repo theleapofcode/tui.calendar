@@ -1,7 +1,7 @@
 /* eslint complexity: 0 */
 /**
  * @fileoverview Model of schedule.
- * @author NHN Ent. FE Development Team <dl_javascript@nhnent.com>
+ * @author NHN FE Development Lab <dl_javascript@nhn.com>
  */
 'use strict';
 
@@ -265,27 +265,26 @@ Schedule.prototype.init = function(options) {
         this.setTimePeriod(options.start, options.end);
     }
 
-    if (options.category === SCHEDULE_CATEGORY.MILESTONE ||
-        options.category === SCHEDULE_CATEGORY.TASK) {
-        this.start = new TZDate(this.end);
-    }
-
     this.raw = options.raw || null;
 };
 
 Schedule.prototype.setAllDayPeriod = function(start, end) {
     // If it is an all-day schedule, only the date information of the string is used.
-    if (util.isString(start)) {
-        start = datetime.parse(start.substring(0, 10));
-    }
-    if (util.isString(end)) {
-        end = datetime.parse(end.substring(0, 10));
+    if (util.isString(start) && start.length === 10) {
+        start = datetime.parse(start);
+    } else {
+        start = new TZDate(start || Date.now());
     }
 
-    this.start = start;
-    this.start.setHours(0, 0, 0);
-    this.end = end || new TZDate(this.start);
-    this.end.setHours(23, 59, 59);
+    if (util.isString(end) && end.length === 10) {
+        end = datetime.parse(end);
+        end.setHours(23, 59, 59);
+    } else {
+        end = new TZDate(end || start);
+    }
+
+    this.start = datetime.start(start);
+    this.end = datetime.renderEnd(start, end);
 };
 
 Schedule.prototype.setTimePeriod = function(start, end) {
@@ -377,9 +376,9 @@ Schedule.prototype.duration = function() {
         duration;
 
     if (this.isAllDay) {
-        duration = new TZDate(datetime.end(end) - datetime.start(start));
+        duration = datetime.end(end) - datetime.start(start);
     } else {
-        duration = new TZDate(end - start);
+        duration = end - start;
     }
 
     return duration;

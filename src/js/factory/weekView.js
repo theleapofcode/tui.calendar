@@ -1,6 +1,6 @@
 /**
  * @fileoverview Factory module for WeekView
- * @author NHN Ent. FE Development Team <dl_javascript@nhnent.com>
+ * @author NHN FE Development Lab <dl_javascript@nhn.com>
  */
 'use strict';
 
@@ -85,7 +85,7 @@ var DEFAULT_PANELS = [
 ];
 
 /* eslint-disable complexity*/
-module.exports = function(baseController, layoutContainer, dragHandler, options) {
+module.exports = function(baseController, layoutContainer, dragHandler, options, viewName) {
     var panels = [],
         vpanels = [];
     var weekView, dayNameContainer, dayNameView, vLayoutContainer, vLayout;
@@ -139,7 +139,7 @@ module.exports = function(baseController, layoutContainer, dragHandler, options)
 
     util.extend(options.week, {panels: panels});
 
-    weekView = new Week(null, options.week, layoutContainer, panels);
+    weekView = new Week(null, options.week, layoutContainer, panels, viewName);
     weekView.handler = {
         click: {},
         dayname: {},
@@ -233,7 +233,7 @@ module.exports = function(baseController, layoutContainer, dragHandler, options)
 
     // binding create schedules event
     if (options.useCreationPopup) {
-        createView = new ScheduleCreationPopup(layoutContainer, baseController.calendars);
+        createView = new ScheduleCreationPopup(layoutContainer, baseController.calendars, options.usageStatistics);
 
         onSaveNewSchedule = function(scheduleData) {
             util.extend(scheduleData, {

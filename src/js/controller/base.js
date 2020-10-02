@@ -1,6 +1,6 @@
 /**
  * @fileoverview Base calendar controller
- * @author NHN Ent. FE Development Team <dl_javascript@nhnent.com>
+ * @author NHN FE Development Lab <dl_javascript@nhn.com>
  */
 'use strict';
 
@@ -73,9 +73,15 @@ function Base(options) {
  * @returns {array} contain dates.
  */
 Base.prototype._getContainDatesInSchedule = function(schedule) {
+    var scheduleStart = schedule.getStarts();
+    var scheduleEnd = schedule.getEnds();
+    var start = datetime.start(scheduleStart);
+    var equalStartEnd = datetime.compare(scheduleStart, scheduleEnd) === 0;
+    var endDate = equalStartEnd ? scheduleEnd : datetime.convertStartDayToLastDay(scheduleEnd);
+    var end = datetime.end(endDate);
     var range = datetime.range(
-        datetime.start(schedule.getStarts()),
-        datetime.end(schedule.getEnds()),
+        start,
+        end,
         datetime.MILLISECONDS_PER_DAY
     );
 
@@ -87,7 +93,7 @@ Base.prototype._getContainDatesInSchedule = function(schedule) {
  ****************/
 
 /**
- * Create an schedule instance from raw data.
+ * Create a schedule instance from raw data.
  * @emits Base#beforeCreateSchedule
  * @emits Base#createdSchedule
  * @param {object} options Data object to create schedule.
@@ -137,17 +143,34 @@ Base.prototype.createSchedules = function(dataList, silent) {
 };
 
 /**
- * Update an schedule.
+ * Update a schedule.
  * @emits Base#updateSchedule
  * @param {Schedule} schedule - schedule instance to update
  * @param {object} options updated object data.
  * @returns {Schedule} updated schedule instance
  */
+// eslint-disable-next-line complexity
 Base.prototype.updateSchedule = function(schedule, options) {
     var start = options.start || schedule.start;
     var end = options.end || schedule.end;
 
     options = options || {};
+
+    if (['milestone', 'task', 'allday', 'time'].indexOf(options.category) > -1) {
+        schedule.set('category', options.category);
+    }
+
+    if (options.category === 'allday') {
+        options.isAllDay = true;
+    }
+
+    if (!util.isUndefined(options.isAllDay)) {
+        schedule.set('isAllDay', options.isAllDay);
+    }
+
+    if (!util.isUndefined(options.calendarId)) {
+        schedule.set('calendarId', options.calendarId);
+    }
 
     if (options.title) {
         schedule.set('title', options.title);
@@ -181,10 +204,6 @@ Base.prototype.updateSchedule = function(schedule, options) {
         schedule.set('origin', options.origin);
     }
 
-    if (!util.isUndefined(options.isAllDay)) {
-        schedule.set('isAllDay', options.isAllDay);
-    }
-
     if (!util.isUndefined(options.isPending)) {
         schedule.set('isPending', options.isPending);
     }
@@ -193,12 +212,24 @@ Base.prototype.updateSchedule = function(schedule, options) {
         schedule.set('isFocused', options.isFocused);
     }
 
+    if (!util.isUndefined(options.isReadOnly)) {
+        schedule.set('isReadOnly', options.isReadOnly);
+    }
+
     if (options.location) {
         schedule.set('location', options.location);
     }
 
     if (options.state) {
         schedule.set('state', options.state);
+    }
+
+    if (options.raw) {
+        schedule.set('raw', options.raw);
+    }
+
+    if (options.attendees) {
+        schedule.set('attendees', options.attendees);
     }
 
     this._removeFromMatrix(schedule);
@@ -257,7 +288,7 @@ Base.prototype._removeFromMatrix = function(schedule) {
 };
 
 /**
- * Add an schedule instance.
+ * Add a schedule instance.
  * @emits Base#addedSchedule
  * @param {Schedule} schedule The instance of Schedule.
  * @param {boolean} silent - set true then don't fire events.
@@ -317,8 +348,8 @@ Base.prototype.splitScheduleByDateRange = function(start, end, scheduleCollectio
  * Return schedules in supplied date range.
  *
  * available only YMD.
- * @param {Date} start start date.
- * @param {Date} end end date.
+ * @param {TZDate} start start date.
+ * @param {TZDate} end end date.
  * @returns {object.<string, Collection>} schedule collection grouped by dates.
  */
 Base.prototype.findByDateRange = function(start, end) {
@@ -369,16 +400,6 @@ Base.prototype.clearSchedules = function() {
 Base.prototype.setTheme = function(theme) {
     return this.theme.setStyles(theme);
 };
-
-/**
- * @typedef {Calendar}
- * @property {string|number} id - calendar id
- * @property {string} name - calendar name
- * @property {string} color - text color when schedule is displayed
- * @property {string} bgColor - background color schedule is displayed
- * @property {string} borderColor - color of left border or bullet point when schedule is displayed
- * @property {boolean} [checked] - whether to show calendar's schedules or not
- */
 
 /**
  * Set calendar list
