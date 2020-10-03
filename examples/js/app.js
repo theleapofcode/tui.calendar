@@ -293,62 +293,43 @@
                 schedule.borderColor = calendar.borderColor;
             }
             schedules.push(schedule);
-        } else {
-            var slots = [];
-            var endTime = recurrence.endTime || ((parseInt(recurrence.startTime.split(':')[0]) + Math.floor(recurrence.durationInMinutes / 60)) + ':' + (parseInt(recurrence.startTime.split(':')[1]) + recurrence.durationInMinutes % 60));
-            if (recurrence.repeatType === 'daily') {
-                var endDate = recurrence.endDate ? moment(new Date(recurrence.endDate + 'T23:59')) : (moment(new Date(recurrence.startDate + 'T23:59')).add((recurrence.occurrences * recurrence.repeatPattern.everyDays), 'd'));
-                var dat = moment(new Date(recurrence.startDate + 'T00:00'));
-
-                while (dat.isBefore(endDate)) {
-                    var startMoment = moment(dat).add(recurrence.startTime.split(':')[0], 'h').add(recurrence.startTime.split(':')[1], 'm');
-                    var endMoment = moment(dat).add(endTime.split(':')[0], 'h').add(endTime.split(':')[1], 'm');
-                    slots.push({
-                        start: startMoment.toDate().getTime(),
-                        end: endMoment.toDate().getTime()
-                    });
-
-                    dat.add(recurrence.repeatPattern.everyDays, 'd');
-                }
-            } else if (recurrence.repeatType === 'weekly') {
-                var endDate = recurrence.endDate ? moment(new Date(recurrence.endDate + 'T23:59')) : (moment(new Date(recurrence.startDate + 'T23:59')).add((recurrence.occurrences * 7 * recurrence.repeatPattern.everyWeeks), 'd'));
-                var dat = moment(new Date(recurrence.startDate + 'T00:00'));
-
-                while (dat.isBefore(endDate)) {
-                    if (recurrence.repeatPattern.daysOfWeek.indexOf(dat.day()) > -1) {
-                        var startMoment = moment(dat).add(recurrence.startTime.split(':')[0], 'h').add(recurrence.startTime.split(':')[1], 'm');
-                        var endMoment = moment(dat).add(endTime.split(':')[0], 'h').add(endTime.split(':')[1], 'm');
-                        slots.push({
-                            start: startMoment.toDate().getTime(),
-                            end: endMoment.toDate().getTime()
-                        });
-                    }
-
-                    if (dat.day() === 6) {
-                        dat.add((((recurrence.repeatPattern.everyWeeks - 1) * 7) + 1), 'd');
-                    } else {
-                        dat.add(1, 'd');
-                    }
-                }
-            } else if (recurrence.repeatType === 'monthly') {
-                var endDate = recurrence.endDate ? moment(new Date(recurrence.endDate + 'T23:59')) : (moment(new Date(recurrence.startDate + 'T23:59')).add((recurrence.occurrences * recurrence.repeatPattern.everyMonths), 'M'));
-                var dat = moment(new Date(recurrence.startDate + 'T00:00'));
-
-                while (dat.isBefore(endDate)) {
-                    if (recurrence.repeatPattern.dayOfMoth === dat.date()) {
-                        var startMoment = moment(dat).add(recurrence.startTime.split(':')[0], 'h').add(recurrence.startTime.split(':')[1], 'm');
-                        var endMoment = moment(dat).add(endTime.split(':')[0], 'h').add(endTime.split(':')[1], 'm');
-                        slots.push({
-                            start: startMoment.toDate().getTime(),
-                            end: endMoment.toDate().getTime()
-                        });
-
-                        dat.add(recurrence.repeatPattern.everyMonths, 'M');
-                    } else {
-                        dat.add(1, 'd');
-                    }
-                }
+        } else {            
+            var rruleObj = {
+                freq: rrule.RRule[recurrence["frequency"]],
+                interval: recurrence["interval"] || 1,
+                dtstart: new Date(Date.UTC(parseInt(recurrence["startDate"].substring(0, 4)), parseInt(recurrence["startDate"].substring(4, 6)) - 1, parseInt(recurrence["startDate"].substring(6, 8))))
             }
+            if(recurrence["tzid"]) {
+                rruleObj["tzid"] = recurrence["tzid"]
+            }
+            if(recurrence["endDate"]) {
+                rruleObj["until"] = new Date(Date.UTC(parseInt(recurrence["endDate"].substring(0, 4)), parseInt(recurrence["endDate"].substring(4, 6)) - 1, parseInt(recurrence["endDate"].substring(6, 8))))
+            } else if(recurrence["count"]) {
+                rruleObj["count"] = recurrence["count"]
+            }
+            if((recurrence["frequency"] == "WEEKLY") && recurrence["daysOfWeek"]) {
+                rruleObj["byweekday"] = recurrence["daysOfWeek"].map((datOfWeek) => rrule.RRule[datOfWeek])
+            } else if((recurrence["frequency"] == "MONTHLY") && recurrence["daysOfMonth"]) {
+                rruleObj["bymonthday"] = recurrence["daysOfMonth"]
+            }
+            console.log(JSON.stringify(rruleObj, null, 2))
+
+            var rule = new rrule.RRule(rruleObj)
+            var slots = rule.all()
+            slots = slots.map((date) => {
+                let startDateTime = moment(date).local().set("hour", parseInt(recurrence["startTime"].substring(0, 2))).set("minute", parseInt(recurrence["startTime"].substring(2, 4))).toDate()
+                let endDateTime = null
+                if(recurrence["endTime"]) {
+                    endDateTime = moment(date).local().set("hour", parseInt(recurrence["endTime"].substring(0, 2))).set("minute", parseInt(recurrence["endTime"].substring(2, 4))).toDate()
+                } else if(recurrence["durationMinutes"]) {
+                    endDateTime = moment(startDateTime).add(parseInt(recurrence["durationMinutes"]), "minutes")
+                }
+                return {
+                    "start": startDateTime,
+                    "end": endDateTime
+                }
+            })
+            console.log(JSON.stringify(slots, null, 2))
 
             var seriesId = String(chance.guid());
             slots.forEach((slot) => {
@@ -357,8 +338,8 @@
                     seriesId: seriesId,
                     title: scheduleData.title,
                     isAllDay: scheduleData.isAllDay,
-                    start: new Date(slot.start),
-                    end: new Date(slot.end),
+                    start: slot.start,
+                    end: slot.end,
                     category: scheduleData.isAllDay ? 'allday' : 'time',
                     dueDateClass: '',
                     location: scheduleData.location,

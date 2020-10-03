@@ -249,7 +249,7 @@ ScheduleCreationPopup.prototype._onClickSaveSchedule = function(target) {
     var endDate;
     var rangeDate;
     var form;
-    var recurrance;
+    var recurrence;
     var isAllDay;
 
     if (!domutil.hasClass(target, className) && !domutil.closest(target, '.' + className)) {
@@ -270,13 +270,13 @@ ScheduleCreationPopup.prototype._onClickSaveSchedule = function(target) {
 
     isAllDay = !!domutil.get(cssPrefix + 'schedule-allday').checked;
     rangeDate = this._getRangeDate(startDate, endDate, isAllDay);
-    recurrance = domutil.get(cssPrefix + 'schedule-recurrence');
+    recurrence = domutil.get(cssPrefix + 'schedule-recurrence');
 
     form = {
         calendarId: this._selectedCal ? this._selectedCal.id : null,
         title: title,
         location: domutil.get(cssPrefix + 'schedule-location'),
-        recurrance: recurrance.value ? JSON.parse(recurrance.value) : null,
+        recurrence: recurrence.value ? JSON.parse(recurrence.value) : null,
         start: rangeDate.start,
         end: rangeDate.end,
         isAllDay: isAllDay,
@@ -710,12 +710,12 @@ ScheduleCreationPopup.prototype._getRangeDate = function(startDate, endDate, isA
 ScheduleCreationPopup.prototype._onClickUpdateSchedule = function(form) {
     var changes = common.getScheduleChanges(
         this._schedule,
-        ['calendarId', 'title', 'location', 'recurrance', 'start', 'end', 'isAllDay', 'state'],
+        ['calendarId', 'title', 'location', 'recurrence', 'start', 'end', 'isAllDay', 'state'],
         {
             calendarId: form.calendarId,
             title: form.title.value,
             location: form.location.value,
-            recurrance: form.recurrance,
+            recurrence: form.recurrence,
             start: form.start,
             end: form.end,
             isAllDay: form.isAllDay,
@@ -765,7 +765,7 @@ ScheduleCreationPopup.prototype._onClickCreateSchedule = function(form) {
         calendarId: form.calendarId,
         title: form.title.value,
         location: form.location.value,
-        recurrance: form.recurrance,
+        recurrence: form.recurrence,
         raw: {
             class: form.isPrivate ? 'private' : 'public'
         },
