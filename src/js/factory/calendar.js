@@ -1844,6 +1844,18 @@ Calendar.setTimezoneOffsetCallback = function(callback) {
 };
 
 /**
+ * Get TZDate class
+ * @param {Date} date - The date object
+ * @returns {TZDate}
+ * @static
+ * @example
+ * var tzDate = tui.Calendar.getTZDate(new Date());
+ */
+Calendar.getTZDate = function(date) {
+    return new TZDate(date);
+};
+
+/**
  * Create controller instance
  * @returns {Base} controller instance
  * @param {Options} options - calendar options

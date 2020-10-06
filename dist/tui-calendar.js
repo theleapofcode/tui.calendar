@@ -1,6 +1,6 @@
 /*!
  * TOAST UI Calendar
- * @version 1.13.0 | Sat Oct 03 2020
+ * @version 1.13.1 | Tue Oct 06 2020
  * @author NHN FE Development Lab <dl_javascript@nhn.com>
  * @license MIT
  */
@@ -10177,6 +10177,18 @@ Calendar.setTimezoneOffset = function(offset) {
  */
 Calendar.setTimezoneOffsetCallback = function(callback) {
     timezone.setOffsetCallback(callback);
+};
+
+/**
+ * Get TZDate class
+ * @param {Date} date - The date object
+ * @returns {TZDate}
+ * @static
+ * @example
+ * var tzDate = tui.Calendar.getTZDate(new Date());
+ */
+Calendar.getTZDate = function(date) {
+    return new TZDate(date);
 };
 
 /**
